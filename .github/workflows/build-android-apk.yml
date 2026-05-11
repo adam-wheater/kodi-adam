@@ -81,7 +81,7 @@ jobs:
       - name: Build depends
         if: steps.depends-cache.outputs.cache-hit != 'true'
         run: |
-          chmod +x tools/depends/bootstrap tools/depends/configure
+          chmod +x tools/depends/bootstrap
           cd tools/depends
           ./bootstrap
           ./configure \
