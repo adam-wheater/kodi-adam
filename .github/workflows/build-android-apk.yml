@@ -23,9 +23,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            autoconf bison build-essential curl flex gawk git gperf \
+            autoconf bison build-essential ccache curl flex gawk git gperf \
             lib32stdc++6 lib32z1 lib32z1-dev libcurl4-openssl-dev \
             unzip zip zlib1g-dev
+          ccache --max-size=5G
+          ccache --set-config=compression=true
+          ccache --zero-stats
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -78,6 +81,14 @@ jobs:
           key: kodi-depends-aarch64-${{ hashFiles('tools/depends/**') }}
           restore-keys: kodi-depends-aarch64-
 
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: kodi-ccache-aarch64-${{ github.sha }}
+          restore-keys: |
+            kodi-ccache-aarch64-
+
       - name: Build depends
         if: steps.depends-cache.outputs.cache-hit != 'true'
         run: |
@@ -102,6 +113,10 @@ jobs:
       - name: Build APK
         run: |
           cmake --build $HOME/kodi-build --target apk
+
+      - name: ccache stats
+        if: always()
+        run: ccache --show-stats
 
       - name: Locate APK
         id: apk
