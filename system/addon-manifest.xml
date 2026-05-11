@@ -58,6 +58,14 @@
   <addon optional="true">peripheral.joystick</addon>
   <addon optional="true">service.xbmc.versioncheck</addon>
   <addon>plugin.video.fenlight</addon>
+  <addon>repository.peno64</addon>
+  <addon>script.IPTVManager.Fix</addon>
+  <addon>script.RealDebrid.vpn</addon>
+  <addon>script.ezmaintenanceplus</addon>
+  <addon>script.realdebrid</addon>
+  <addon>service.subtitles.localsubtitle</addon>
+  <addon>service.subtitles.opensubtitles-com-dualsub</addon>
+  <addon>service.subtitles.opensubtitles_by_opensubtitles_dualsub</addon>
   <addon>repository.cocoscrapers</addon>
   <addon>script.fentastic.helper</addon>
   <addon>script.module.cocoscrapers</addon>
