@@ -74,7 +74,7 @@ jobs:
         uses: actions/cache@v4
         id: depends-cache
         with:
-          path: tools/depends/xbmc-depends
+          path: ~/kodi-depends
           key: kodi-depends-aarch64-${{ hashFiles('tools/depends/**') }}
           restore-keys: kodi-depends-aarch64-
 
@@ -87,7 +87,8 @@ jobs:
           ./configure \
             --host=aarch64-linux-android \
             --with-tarballs=$HOME/kodi-tarballs \
-            --with-sdk-path=$HOME/android-sdk
+            --with-sdk-path=$HOME/android-sdk \
+            --prefix=$HOME/kodi-depends
           make -j$(nproc)
 
       - name: Configure CMake build system
