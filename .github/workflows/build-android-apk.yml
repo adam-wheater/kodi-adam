@@ -1,0 +1,123 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf bison build-essential curl flex gawk git gperf \
+            lib32stdc++6 lib32z1 lib32z1-dev libcurl4-openssl-dev \
+            unzip zip zlib1g-dev
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK and NDK
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
+            -o /tmp/cmdtools.zip
+          unzip -q /tmp/cmdtools.zip -d /tmp/cmdtools
+          mv /tmp/cmdtools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+
+          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root=$HOME/android-sdk --licenses > /dev/null
+
+          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+            --sdk_root=$HOME/android-sdk \
+            "platform-tools" \
+            "platforms;android-37" \
+            "build-tools;37.0.0" \
+            "ndk;28.2.13676358"
+
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -keystore ~/.android/debug.keystore -v \
+            -alias androiddebugkey \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -keypass android -storepass android \
+            -keyalg RSA -keysize 2048 -validity 10000
+
+      - name: Cache depends tarballs
+        uses: actions/cache@v4
+        with:
+          path: $HOME/kodi-tarballs
+          key: kodi-tarballs-${{ hashFiles('tools/depends/target/**/*.cmake', 'tools/depends/target/**/Makefile') }}
+          restore-keys: kodi-tarballs-
+
+      - name: Cache built depends
+        uses: actions/cache@v4
+        id: depends-cache
+        with:
+          path: tools/depends/xbmc-depends
+          key: kodi-depends-aarch64-${{ hashFiles('tools/depends/**') }}
+          restore-keys: kodi-depends-aarch64-
+
+      - name: Build depends
+        if: steps.depends-cache.outputs.cache-hit != 'true'
+        run: |
+          cd tools/depends
+          ./bootstrap
+          ./configure \
+            --host=aarch64-linux-android \
+            --with-tarballs=$HOME/kodi-tarballs \
+            --with-sdk-path=$HOME/android-sdk
+          make -j$(nproc)
+
+      - name: Configure CMake build system
+        run: |
+          make -C tools/depends/target/cmakebuildsys BUILD_DIR=$HOME/kodi-build
+
+      - name: Build Kodi
+        run: |
+          cmake --build $HOME/kodi-build --parallel $(nproc)
+
+      - name: Build APK
+        run: |
+          cmake --build $HOME/kodi-build --target apk
+
+      - name: Locate APK
+        id: apk
+        run: |
+          APK=$(find $GITHUB_WORKSPACE $HOME/kodi-build -name "*.apk" -type f | head -1)
+          echo "path=$APK" >> $GITHUB_OUTPUT
+          echo "name=$(basename $APK)" >> $GITHUB_OUTPUT
+          echo "Found APK: $APK"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kodi-adam-${{ github.sha }}
+          path: ${{ steps.apk.outputs.path }}
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Kodi Adam ${{ github.ref_name }}
+          files: ${{ steps.apk.outputs.path }}
+          generate_release_notes: true
