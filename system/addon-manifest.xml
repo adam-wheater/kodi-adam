@@ -56,10 +56,10 @@
   <addon optional="true">game.shader.presets</addon>
   <addon optional="true">inputstream.adaptive</addon>
   <addon optional="true">peripheral.joystick</addon>
-  <addon optional="true">plugin.video.fenlight</addon>
-  <addon optional="true">repository.cocoscrapers</addon>
-  <addon optional="true">script.fentastic.helper</addon>
-  <addon optional="true">script.module.cocoscrapers</addon>
   <addon optional="true">service.xbmc.versioncheck</addon>
-  <addon optional="true">skin.fentastic</addon>
+  <addon>plugin.video.fenlight</addon>
+  <addon>repository.cocoscrapers</addon>
+  <addon>script.fentastic.helper</addon>
+  <addon>script.module.cocoscrapers</addon>
+  <addon>skin.fentastic</addon>
 </addons>
