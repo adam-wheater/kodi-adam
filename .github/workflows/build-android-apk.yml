@@ -89,6 +89,11 @@ jobs:
           restore-keys: |
             kodi-ccache-aarch64-
 
+      - name: Fix JDK headers for libbluray
+        run: |
+          sudo mkdir -p "$JAVA_HOME/include/android"
+          sudo ln -sf "$JAVA_HOME/include/linux/"* "$JAVA_HOME/include/android/" 2>/dev/null || true
+
       - name: Build depends
         if: steps.depends-cache.outputs.cache-hit != 'true'
         run: |
