@@ -67,23 +67,25 @@ jobs:
             -keypass android -storepass android \
             -keyalg RSA -keysize 2048 -validity 10000
 
-      - name: Cache depends tarballs
-        uses: actions/cache@v4
+      - name: Restore depends tarballs cache
+        uses: actions/cache/restore@v4
+        id: tarballs-cache
         with:
           path: $HOME/kodi-tarballs
           key: kodi-tarballs-${{ hashFiles('tools/depends/target/**/*.cmake', 'tools/depends/target/**/Makefile') }}
           restore-keys: kodi-tarballs-
 
-      - name: Cache built depends
-        uses: actions/cache@v4
+      - name: Restore built depends cache
+        uses: actions/cache/restore@v4
         id: depends-cache
         with:
           path: ~/kodi-depends
           key: kodi-depends-aarch64-${{ hashFiles('tools/depends/**') }}
           restore-keys: kodi-depends-aarch64-
 
-      - name: Cache ccache
-        uses: actions/cache@v4
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        id: ccache-restore
         with:
           path: ~/.cache/ccache
           key: kodi-ccache-aarch64-${{ github.sha }}
@@ -108,6 +110,20 @@ jobs:
             --prefix=$HOME/kodi-depends
           make -j$(nproc)
 
+      - name: Save depends tarballs cache
+        uses: actions/cache/save@v4
+        if: steps.tarballs-cache.outputs.cache-hit != 'true'
+        with:
+          path: $HOME/kodi-tarballs
+          key: ${{ steps.tarballs-cache.outputs.cache-primary-key }}
+
+      - name: Save built depends cache
+        uses: actions/cache/save@v4
+        if: steps.depends-cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/kodi-depends
+          key: ${{ steps.depends-cache.outputs.cache-primary-key }}
+
       - name: Configure CMake build system
         run: |
           make -C tools/depends/target/cmakebuildsys BUILD_DIR=$HOME/kodi-build
@@ -115,6 +131,13 @@ jobs:
       - name: Build Kodi
         run: |
           cmake --build $HOME/kodi-build --parallel $(nproc)
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ~/.cache/ccache
+          key: kodi-ccache-aarch64-${{ github.sha }}
 
       - name: Build APK
         run: |
