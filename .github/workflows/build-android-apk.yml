@@ -23,7 +23,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            ant \
             autoconf bison build-essential ccache curl flex gawk git gperf \
             lib32stdc++6 lib32z1 lib32z1-dev libcurl4-openssl-dev \
             unzip zip zlib1g-dev
@@ -36,6 +35,14 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Install Apache Ant
+        run: |
+          curl -fsSL "https://archive.apache.org/dist/ant/binaries/apache-ant-1.10.15-bin.tar.gz" \
+            -o /tmp/ant.tar.gz
+          sudo tar -xzf /tmp/ant.tar.gz -C /opt/
+          echo "ANT_HOME=/opt/apache-ant-1.10.15" >> $GITHUB_ENV
+          echo "/opt/apache-ant-1.10.15/bin" >> $GITHUB_PATH
 
       - name: Set up Android SDK and NDK
         run: |
