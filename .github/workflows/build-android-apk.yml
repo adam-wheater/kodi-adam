@@ -104,8 +104,7 @@ jobs:
           sudo mkdir -p "$JAVA_HOME/include/android"
           sudo ln -sf "$JAVA_HOME/include/linux/"* "$JAVA_HOME/include/android/" 2>/dev/null || true
 
-      - name: Build depends
-        if: steps.depends-cache.outputs.cache-hit != 'true'
+      - name: Configure depends build system
         run: |
           chmod +x tools/depends/bootstrap
           cd tools/depends
@@ -115,7 +114,11 @@ jobs:
             --with-tarballs=$HOME/kodi-tarballs \
             --with-sdk-path=$HOME/android-sdk \
             --prefix=$HOME/kodi-depends
-          make -j$(nproc)
+
+      - name: Build depends
+        if: steps.depends-cache.outputs.cache-hit != 'true'
+        run: |
+          cd tools/depends && make -j$(nproc)
 
       - name: Save depends tarballs cache
         uses: actions/cache/save@v4
