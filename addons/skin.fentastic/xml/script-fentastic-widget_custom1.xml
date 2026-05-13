@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+    <include name="Custom1Widgets">
+        <include content="WidgetListBigPoster">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=search.get_key_id&amp;media_type=movie"/>
+            <param name="widget_header" value="Search Movies"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="23011"/>
+        </include>
+        <include content="WidgetListBigPoster">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=search.get_key_id&amp;media_type=tv_show"/>
+            <param name="widget_header" value="Search TV Shows"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="23012"/>
+        </include>
+    </include>
+</includes>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+    <include name="TVShowWidgets">
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_trending"/>
+            <param name="widget_header" value="Trending"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="22011"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=tmdb_tv_popular"/>
+            <param name="widget_header" value="Popular"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="22012"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_tvshow_list&amp;action=trakt_tv_most_watched"/>
+            <param name="widget_header" value="Most Watched"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="22013"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=navigator.providers&amp;menu_type=tvshow"/>
+            <param name="widget_header" value="Providers"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="22014"/>
+        </include>
+    </include>
+</includes>

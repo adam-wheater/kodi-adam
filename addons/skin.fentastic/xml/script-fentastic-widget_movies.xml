@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+    <include name="MovieWidgets">
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_trending"/>
+            <param name="widget_header" value="Trending"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="19011"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_popular"/>
+            <param name="widget_header" value="Popular"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="19012"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=tmdb_movies_latest_releases"/>
+            <param name="widget_header" value="Latest Releases"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="19013"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=build_movie_list&amp;action=trakt_movies_most_watched"/>
+            <param name="widget_header" value="Most Watched"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="19014"/>
+        </include>
+        <include content="WidgetListBigLandscape">
+            <param name="content_path" value="plugin://plugin.video.fenlight/?mode=navigator.providers&amp;menu_type=movie"/>
+            <param name="widget_header" value="Providers"/>
+            <param name="widget_target" value="videos"/>
+            <param name="list_id" value="19015"/>
+        </include>
+    </include>
+</includes>
