@@ -10,6 +10,7 @@ from time import time
 from sqlite3 import dbapi2 as db
 from cocoscrapers.modules.control import existsPath, dataPath, makeFile, cacheFile
 
+
 def get(function, duration, *args):
 	"""
 	:param function: Function to be executed

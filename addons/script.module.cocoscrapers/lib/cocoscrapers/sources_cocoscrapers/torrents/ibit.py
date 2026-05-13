@@ -6,10 +6,11 @@
 
 import re
 from urllib.parse import quote_plus, unquote_plus
+from cocoscrapers.modules import cfscrape
 from cocoscrapers.modules import client
 from cocoscrapers.modules import source_utils
 from cocoscrapers.modules import workers
-_DATA = re.compile(r'<a\s*href\s*=\s*["\'](/torrent_details/.+?)["\']><span>(.+?)</span>.*?<td\s*class\s*=\s*["\']size-row["\']>(.+?)</td><td\s*class\s*=\s*["\']sn["\']>([0-9]+)</td>', re.I)
+_DATA = re.compile(r'<a\s*href\s*=\s*["\'](/torrent/.+?/)["\']\s*title\s*=\s*["\'](.+?)["\'].*?<td\s*class\s*=\s*["\']digits["\']>(.*?)<.*?<td\s*class\s*=["\']digits["\']\s*data-title\s*=\s*["\']S["\']>(.*?)</td>', re.I)
 
 
 class source:
@@ -19,8 +20,9 @@ class source:
 	hasEpisodes = True
 	def __init__(self):
 		self.language = ['en']
-		self.base_link = "https://isohunt.nz"
-		self.search_link = '/torrent/?ihq=%s&fiht=2&age=0&Torrent_sort=seeders&Torrent_page=0'
+		self.base_link = "https://ibit.to"
+		self.tvsearch = "/torrent-search/{0}/TV/size:desc/1/"
+		self.moviesearch = "/torrent-search/{0}/Movies/size:desc/1/"
 		self.min_seeders = 0
 
 	def sources(self, data, hostDict):
@@ -28,22 +30,25 @@ class source:
 		if not data: return self.sources
 		self.sources_append = self.sources.append
 		try:
+			self.scraper = cfscrape.create_scraper()
 			self.aliases = data['aliases']
 			self.year = data['year']
 			if 'tvshowtitle' in data:
 				self.title = data['tvshowtitle'].replace('&', 'and').replace('Special Victims Unit', 'SVU').replace('/', ' ').replace('$', 's')
 				self.episode_title = data['title']
 				self.hdlr = 'S%02dE%02d' % (int(data['season']), int(data['episode']))
+				search_link = self.tvsearch
 			else:
 				self.title = data['title'].replace('&', 'and').replace('/', ' ').replace('$', 's')
 				self.episode_title = None
 				self.hdlr = self.year
+				search_link = self.moviesearch
 			query = '%s %s' % (re.sub(r'[^A-Za-z0-9\s\.-]+', '', self.title), self.hdlr)
-			url = '%s%s' % (self.base_link, self.search_link % quote_plus(query))
+			url = '%s%s' % (self.base_link, search_link.format(quote_plus(query)))
 			# log_utils.log('url = %s' % url)
-			results = client.request(url, timeout=5)
+			results = self.scraper.get(url, timeout=5).text
 			if not results or '<tbody' not in results: return
-			rows = client.parseDOM(results, 'tr', attrs={'data-key': '0'})
+			rows = client.parseDOM(results, 'tr')
 			self.undesirables = source_utils.get_undesirables()
 			self.check_foreign_audio = source_utils.check_foreign_audio()
 			threads = []
@@ -54,7 +59,7 @@ class source:
 			[i.join() for i in threads]
 			return self.sources
 		except:
-			source_utils.scraper_error('ISOHUNT2')
+			source_utils.scraper_error('IBIT')
 			return self.sources
 
 	def get_sources(self, row):
@@ -63,13 +68,12 @@ class source:
 		if not data: return
 		for items in data:
 			try:
-				# item[1] does not contain full info like the &dn= portion of magnet
 				link = '%s%s' % (self.base_link, items[0])
-				result = client.request(link, timeout=5)
+				result = self.scraper.get(link, timeout=10).text
 				if not result: continue
-				try: url =unquote_plus(re.search(r'(magnet.*?)["\']', result).group(1)).replace('&amp;', '&').split('&tr')[0].replace(' ', '.')
+
+				try: url = unquote_plus(re.search(r'(magnet:.*?)["\']', result).group(1).replace('\\x26', '&').replace('\\x2b', '+').replace('X-X', '')).split('&tr=')[0]
 				except: continue
-				url = unquote_plus(url) # many links dbl quoted so we must unquote again
 				hash = re.search(r'btih:(.*?)&', url, re.I).group(1)
 				name = source_utils.clean_name(url.split('&dn=')[1])
 
@@ -95,7 +99,7 @@ class source:
 				except: dsize = 0
 				info = ' | '.join(info)
 
-				self.sources_append({'provider': 'isohunt2', 'source': 'torrent', 'seeders': seeders, 'hash': hash, 'name': name, 'name_info': name_info,
+				self.sources_append({'provider': 'ibit', 'source': 'torrent', 'seeders': seeders, 'hash': hash, 'name': name, 'name_info': name_info,
 													'quality': quality, 'language': 'en', 'url': url, 'info': info, 'direct': False, 'debridonly': True, 'size': dsize})
 			except:
-				source_utils.scraper_error('ISOHUNT2')
+				source_utils.scraper_error('IBIT')

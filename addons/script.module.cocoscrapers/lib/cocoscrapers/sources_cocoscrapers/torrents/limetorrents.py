@@ -5,112 +5,99 @@
 """
 
 import re
-from urllib.parse import quote_plus, unquote_plus
-from cocoscrapers.modules import cache
+from urllib.parse import quote_plus
+from cocoscrapers.modules import cfscrape
 from cocoscrapers.modules import client
 from cocoscrapers.modules import source_utils
 from cocoscrapers.modules import workers
 
 
 class source:
-	priority = 4
+	priority = 5
 	pack_capable = True
 	hasMovies = True
 	hasEpisodes = True
 	def __init__(self):
 		self.language = ['en']
-		self.domains = ['kick4ss.com', 'thekat.info', 'kickass.cm', 'kickass.ws', 'kickasst.net',
-								'kickasshydra.dev', 'kickasshydra.net', 'kathydra.com', 'kickass.onl',
-								'kickasstorrents.id', 'thekat.cc', 'kkat.net', 'kickasstorrents.bz']
-		self._base_link = None
-		self.moviesearch = '/usearch/{0}%20category:movies/?field=size&sorder=desc'
-		self.tvsearch = '/usearch/{0}%20category:tv/?field=size&sorder=desc'
+		self.base_link = "https://www.limetorrents.pro"
+		# self.base_link = "https://limetorrents.proxyninja.org" # if ever needed
+		self.tvsearch = '/search/tv/{0}/1/'
+		self.moviesearch = '/search/movies/{0}/1/'
 		self.min_seeders = 0
-
-	@property
-	def base_link(self):
-		if not self._base_link:
-			self._base_link = cache.get(self.__get_base_url, 120, 'https://%s' % self.domains[0])
-		return self._base_link
-
-	def __get_base_url(self, fallback):
-		for domain in self.domains:
-			try:
-				url = 'https://%s' % domain
-				result = client.request(url, limit=1, timeout=5)
-				try: result = re.search('r<title>(.+?)</title>', result, re.I).group(1)
-				except: result = None
-				if result and 'Kickass' in result: return url
-			except:
-				source_utils.scraper_error('KICKASS2')
-		return fallback
 
 	def sources(self, data, hostDict):
 		self.sources = []
 		if not data: return self.sources
 		self.sources_append = self.sources.append
 		try:
+			self.scraper = cfscrape.create_scraper()
 			self.aliases = data['aliases']
 			self.year = data['year']
+			urls = []
 			if 'tvshowtitle' in data:
 				self.title = data['tvshowtitle'].replace('&', 'and').replace('Special Victims Unit', 'SVU').replace('/', ' ').replace('$', 's')
 				self.episode_title = data['title']
 				self.hdlr = 'S%02dE%02d' % (int(data['season']), int(data['episode']))
-				search_link = self.tvsearch
+				url = self.tvsearch
 			else:
 				self.title = data['title'].replace('&', 'and').replace('/', ' ').replace('$', 's')
 				self.episode_title = None
 				self.hdlr = self.year
-				search_link = self.moviesearch
+				url = self.moviesearch
 			query = '%s %s' % (re.sub(r'[^A-Za-z0-9\s\.-]+', '', self.title), self.hdlr)
-			urls = []
-			url = '%s%s' % (self.base_link, search_link.format(quote_plus(query)))
+			url = url.format(quote_plus(query))
 			urls.append(url)
-			if url.endswith('field=size&sorder=desc'): urls.append(url.rsplit("/", 1)[0] + '/2/')
-			else: urls.append(url + '/2/')
-			# log_utils.log('urls = %s' % urls)
+			urls.append(url.replace('/1/', '/2/'))
 			self.undesirables = source_utils.get_undesirables()
 			self.check_foreign_audio = source_utils.check_foreign_audio()
 			threads = []
 			append = threads.append
 			for url in urls:
-				append(workers.Thread(self.get_sources, url))
+				link = ('%s%s' % (self.base_link, url)).replace('+', '-')
+				append(workers.Thread(self.get_sources, link))
 			[i.start() for i in threads]
 			[i.join() for i in threads]
 			return self.sources
 		except:
-			source_utils.scraper_error('KICKASS2')
+			source_utils.scraper_error('LIMETORRENTS')
 			return self.sources
 
-	def get_sources(self, url):
-		# log_utils.log('url = %s' % url)
+	def get_sources(self, link):
+		# log_utils.log('link = %s' % link)
 		try:
-			results = client.request(url, timeout=7)
-			if not results: return
-			rows = client.parseDOM(results, 'tr', attrs={'id': 'torrent_latest_torrents'})
+			results = self.scraper.get(link, timeout=10).text
+			if '503 Service Temporarily Unavailable' in results:
+				from cocoscrapers.modules import log_utils
+				log_utils.log('LIMETORRENTS (Single request failure): 503 Service Temporarily Unavailable')
+				return
+			if not results or '<table' not in results: return
+			table = client.parseDOM(results, 'table', attrs={'class': 'table2'})[0]
+			rows = client.parseDOM(table, 'tr')
+			if not rows: return
 		except:
-			source_utils.scraper_error('KICKASS2')
+			source_utils.scraper_error('LIMETORRENTS')
 			return
+
 		for row in rows:
 			try:
+				if '<th' in row: continue
 				columns = re.findall(r'<td.*?>(.+?)</td>', row, re.DOTALL)
 
-				url = unquote_plus(columns[0]).replace('&amp;', '&')
-				try: url = re.search(r'(magnet:.+?)&tr=', url, re.I).group(1).replace(' ', '.')
-				except: continue
-				hash = re.search(r'btih:(.*?)&', url, re.I).group(1)
-				name = source_utils.clean_name(unquote_plus(url.split('&dn=')[1])) # some links on kickass dbl encoded
+				hash = re.search(r'/torrent/(.+?).torrent', columns[0], re.I).group(1)
+				name = re.search(r'title\s*=\s*(.+?)["\']', columns[0], re.I).group(1)
+				name = source_utils.clean_name(name)
 
 				if not source_utils.check_title(self.title, self.aliases, name, self.hdlr, self.year): continue
 				name_info = source_utils.info_from_name(name, self.title, self.year, self.hdlr, self.episode_title)
 				if source_utils.remove_lang(name_info, self.check_foreign_audio): continue
 				if self.undesirables and source_utils.remove_undesirables(name_info, self.undesirables): continue
 
-				if not self.episode_title: #filter for eps returned in movie query (rare but movie and show exists for Run in 2020)
+				if not self.episode_title: # filter for eps returned in movie query (rare but movie and show exists for Run in 2020)
 					ep_strings = [r'[.-]s\d{2}e\d{2}([.-]?)', r'[.-]s\d{2}([.-]?)', r'[.-]season[.-]?\d{1,2}[.-]?']
 					name_lower = name.lower()
 					if any(re.search(item, name_lower) for item in ep_strings): continue
 
+				url = 'magnet:?xt=urn:btih:%s&dn=%s' % (hash, name)
 				try:
 					seeders = int(columns[3].replace(',', ''))
 					if self.min_seeders > seeders: continue
@@ -118,20 +105,22 @@ class source:
 
 				quality, info = source_utils.get_release_quality(name_info, url)
 				try:
-					dsize, isize = source_utils._size(columns[1].split('<')[0])
+					dsize, isize = source_utils._size(columns[2])
 					info.insert(0, isize)
 				except: dsize = 0
 				info = ' | '.join(info)
-				self.sources_append({'provider': 'kickass2', 'source': 'torrent', 'seeders': seeders, 'hash': hash, 'name': name, 'name_info': name_info,
+
+				self.sources_append({'provider': 'limetorrents', 'source': 'torrent', 'seeders': seeders, 'hash': hash, 'name': name, 'name_info': name_info,
 												'quality': quality, 'language': 'en', 'url': url, 'info': info, 'direct': False, 'debridonly': True, 'size': dsize})
 			except:
-				source_utils.scraper_error('KICKASS2')
+				source_utils.scraper_error('LIMETORRENTS')
 
 	def sources_packs(self, data, hostDict, search_series=False, total_seasons=None, bypass_filter=False):
 		self.sources = []
 		if not data: return self.sources
 		self.sources_append = self.sources.append
 		try:
+			self.scraper = cfscrape.create_scraper()
 			self.search_series = search_series
 			self.total_seasons = total_seasons
 			self.bypass_filter = bypass_filter
@@ -157,32 +146,39 @@ class source:
 			threads = []
 			append = threads.append
 			for url in queries:
-				link = '%s%s' % (self.base_link, url)
+				link = ('%s%s' % (self.base_link, url)).replace('+', '-')
 				append(workers.Thread(self.get_sources_packs, link))
 			[i.start() for i in threads]
 			[i.join() for i in threads]
 			return self.sources
 		except:
-			source_utils.scraper_error('KICKASS2')
+			source_utils.scraper_error('LIMETORRENTS')
 			return self.sources
 
 	def get_sources_packs(self, link):
 		try:
-			results = client.request(link, timeout=7)
-			if not results: return
-			rows = client.parseDOM(results, 'tr', attrs={'id': 'torrent_latest_torrents'})
+			results = self.scraper.get(link, timeout=10).text
+			if '503 Service Temporarily Unavailable' in results:
+				from cocoscrapers.modules import log_utils
+				req_type = 'SHOW' if self.search_series else 'SEASON'
+				log_utils.log('LIMETORRENTS (%s Pack request failure): 503 Service Temporarily Unavailable' % req_type)
+				return
+			if not results or '<table' not in results: return
+			table = client.parseDOM(results, 'table', attrs={'class': 'table2'})[0]
+			rows = client.parseDOM(table, 'tr')
+			if not rows: return
 		except:
-			source_utils.scraper_error('KICKASS2')
+			source_utils.scraper_error('LIMETORRENTS')
 			return
+
 		for row in rows:
 			try:
+				if '<th' in row: continue
 				columns = re.findall(r'<td.*?>(.+?)</td>', row, re.DOTALL)
 
-				url = unquote_plus(columns[0]).replace('&amp;', '&')
-				try: url = re.search(r'(magnet:.+?)&tr=', url, re.I).group(1).replace(' ', '.')
-				except: continue
-				hash = re.search(r'btih:(.*?)&', url, re.I).group(1)
-				name = source_utils.clean_name(unquote_plus(url.split('&dn=')[1])) # some links on kickass dbl encoded
+				hash = re.search(r'/torrent/(.+?).torrent', columns[0], re.I).group(1)
+				name = re.search(r'title\s*=\s*(.+?)["\']', columns[0], re.I).group(1)
+				name = source_utils.clean_name(name)
 
 				episode_start, episode_end = 0, 0
 				if not self.search_series:
@@ -201,6 +197,8 @@ class source:
 				name_info = source_utils.info_from_name(name, self.title, self.year, season=self.season_x, pack=package)
 				if source_utils.remove_lang(name_info, self.check_foreign_audio): continue
 				if self.undesirables and source_utils.remove_undesirables(name_info, self.undesirables): continue
+
+				url = 'magnet:?xt=urn:btih:%s&dn=%s' % (hash, name)
 				try:
 					seeders = int(columns[3].replace(',', ''))
 					if self.min_seeders > seeders: continue
@@ -208,14 +206,15 @@ class source:
 
 				quality, info = source_utils.get_release_quality(name_info, url)
 				try:
-					dsize, isize = source_utils._size(columns[1].split('<')[0])
+					dsize, isize = source_utils._size(columns[2])
 					info.insert(0, isize)
 				except: dsize = 0
 				info = ' | '.join(info)
-				item = {'provider': 'kickass2', 'source': 'torrent', 'seeders': seeders, 'hash': hash, 'name': name, 'name_info': name_info, 'quality': quality,
+
+				item = {'provider': 'limetorrents', 'source': 'torrent', 'seeders': seeders, 'hash': hash, 'name': name, 'name_info': name_info, 'quality': quality,
 							'language': 'en', 'url': url, 'info': info, 'direct': False, 'debridonly': True, 'size': dsize, 'package': package}
 				if self.search_series: item.update({'last_season': last_season})
 				elif episode_start: item.update({'episode_start': episode_start, 'episode_end': episode_end}) # for partial season packs
 				self.sources_append(item)
 			except:
-				source_utils.scraper_error('KICKASS2')
+				source_utils.scraper_error('LIMETORRENTS')
