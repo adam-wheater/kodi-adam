@@ -151,6 +151,7 @@ jobs:
 
       - name: Build APK
         run: |
+          find $HOME/kodi-build -name "gradlew" -exec chmod +x {} \;
           cmake --build $HOME/kodi-build --target apk
 
       - name: ccache stats
