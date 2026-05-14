@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<advancedsettings version="1.0">
+  <network>
+    <!-- 500 MB read buffer — prevents buffering on 4K RealDebrid streams -->
+    <cachemembuffersize>524288000</cachemembuffersize>
+    <!-- Read 4x further ahead than default -->
+    <readbufferfactor>4.0</readbufferfactor>
+  </network>
+</advancedsettings>
