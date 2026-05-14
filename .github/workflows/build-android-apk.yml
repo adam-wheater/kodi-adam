@@ -7,6 +7,17 @@ on:
       - main
     tags:
       - 'v*.*.*'
+    paths:
+      # Only rebuild when actual Kodi source or bundled addons change.
+      # Pushes that only touch docs, skin XMLs, README, etc. are skipped.
+      - 'xbmc/**'
+      - 'tools/**'
+      - 'cmake/**'
+      - 'addons/**'
+      - 'userdata/**'
+      - 'media/**'
+      - 'system/**'
+      - '.github/workflows/**'
 
 jobs:
   build:
@@ -44,7 +55,15 @@ jobs:
           echo "ANT_HOME=/opt/apache-ant-1.10.15" >> $GITHUB_ENV
           echo "/opt/apache-ant-1.10.15/bin" >> $GITHUB_PATH
 
+      - name: Restore Android SDK cache
+        id: sdk-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/android-sdk
+          key: android-sdk-35-ndk-28.2.13676358
+
       - name: Set up Android SDK and NDK
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
@@ -62,6 +81,15 @@ jobs:
             "build-tools;35.0.0" \
             "ndk;28.2.13676358"
 
+      - name: Save Android SDK cache
+        if: steps.sdk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/android-sdk
+          key: android-sdk-35-ndk-28.2.13676358
+
+      - name: Set Android SDK env vars
+        run: |
           echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
 
