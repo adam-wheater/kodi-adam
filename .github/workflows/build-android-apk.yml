@@ -154,6 +154,25 @@ jobs:
           find $HOME/kodi-build -name "gradlew" -exec chmod +x {} \;
           cmake --build $HOME/kodi-build --target apk
 
+      - name: Sign APK
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE }}
+          KEYSTORE_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > /tmp/release.keystore
+          UNSIGNED=$(find $HOME/kodi-build -name "*.apk" -type f | head -1)
+          SIGNED="${UNSIGNED%.apk}-signed.apk"
+          $ANDROID_SDK_ROOT/build-tools/$(ls $ANDROID_SDK_ROOT/build-tools | sort -V | tail -1)/apksigner sign \
+            --ks /tmp/release.keystore \
+            --ks-pass pass:$KEYSTORE_PASS \
+            --ks-key-alias $KEY_ALIAS \
+            --key-pass pass:$KEY_PASS \
+            --out "$SIGNED" \
+            "$UNSIGNED"
+          echo "SIGNED_APK=$SIGNED" >> $GITHUB_ENV
+
       - name: ccache stats
         if: always()
         run: ccache --show-stats
@@ -161,7 +180,7 @@ jobs:
       - name: Locate APK
         id: apk
         run: |
-          APK=$(find $GITHUB_WORKSPACE $HOME/kodi-build -name "*.apk" -type f | head -1)
+          APK=$SIGNED_APK
           echo "path=$APK" >> $GITHUB_OUTPUT
           echo "name=$(basename $APK)" >> $GITHUB_OUTPUT
           echo "Found APK: $APK"
