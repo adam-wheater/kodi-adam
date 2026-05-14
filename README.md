@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="tools/android/packaging/media/playstore.png" width="120" alt="Logo"/>
+</p>
+
 # Kodi Adam
 
 A custom Android build of [Kodi](https://kodi.tv/) with a curated set of plugins and a custom skin pre-installed — ready to use out of the box.
