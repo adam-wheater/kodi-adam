@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="screensaver.xbmc.builtin.black"
+       version="1.0.0"
+       name="Black screensaver"
+       provider-name="Team Kodi">
+  <requires>
+    <import addon="xbmc.core" version="0.1.0"/>
+  </requires>
+  <extension point="xbmc.ui.screensaver"/>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_gb">Black Screensaver</summary>
+    <description lang="en_gb">Turns the screen black</description>
+    <platform>all</platform>
+    <license>GPL-2.0-or-later</license>
+    <source>https://github.com/xbmc/xbmc</source>
+  </extension>
+</addon>
