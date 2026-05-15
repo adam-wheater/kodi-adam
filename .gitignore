@@ -250,6 +250,7 @@ cmake_install.cmake
 
 # /userdata/
 /userdata/Database
+!/userdata/Database/Addons33.db
 /userdata/playlists
 /userdata/Thumbnails
 /userdata/cache
