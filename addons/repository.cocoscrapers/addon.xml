@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="repository.cocoscrapers"
+       version="1.0.0"
+       name="CocoScrapers Repository"
+       provider-name="CocoJoe2411">
+  <requires>
+    <import addon="xbmc.core" version="0.1.0"/>
+  </requires>
+  <extension point="xbmc.addon.repository" name="CocoScrapers Repository">
+    <dir>
+      <info compressed="false">https://raw.githubusercontent.com/CocoJoe2411/repository.cocoscrapers/main/zips/addons.xml</info>
+      <checksum>https://raw.githubusercontent.com/CocoJoe2411/repository.cocoscrapers/main/zips/addons.xml.md5</checksum>
+      <datadir zip="true">https://raw.githubusercontent.com/CocoJoe2411/repository.cocoscrapers/main/zips/</datadir>
+    </dir>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_gb">CocoScrapers Repository</summary>
+    <description lang="en_gb">Repository for CocoScrapers addon</description>
+    <platform>all</platform>
+    <license>GPL-2.0-or-later</license>
+    <source>https://github.com/CocoJoe2411/repository.cocoscrapers</source>
+  </extension>
+</addon>
