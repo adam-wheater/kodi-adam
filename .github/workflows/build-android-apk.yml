@@ -180,6 +180,20 @@ jobs:
           path: ~/.cache/ccache
           key: kodi-ccache-armv7-${{ github.sha }}
 
+      - name: Bundle custom addons into APK staging
+        run: |
+          ADDONS_STAGING=$(find $HOME/kodi-build -path "*/assets/addons" -type d 2>/dev/null | head -1)
+          echo "Addons staging dir: $ADDONS_STAGING"
+          for addon_dir in addons/*/; do
+            addon=$(basename "$addon_dir")
+            if [ ! -d "$ADDONS_STAGING/$addon" ]; then
+              echo "Bundling: $addon"
+              cp -r "$addon_dir" "$ADDONS_STAGING/"
+            else
+              echo "Skipping (already staged by CMake): $addon"
+            fi
+          done
+
       - name: Build APK
         run: |
           find $HOME/kodi-build -name "gradlew" -exec chmod +x {} \;
