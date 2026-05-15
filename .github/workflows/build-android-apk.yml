@@ -118,17 +118,17 @@ jobs:
         id: depends-cache
         with:
           path: ~/kodi-depends
-          key: kodi-depends-aarch64-${{ hashFiles('tools/depends/**') }}
-          restore-keys: kodi-depends-aarch64-
+          key: kodi-depends-armv7-${{ hashFiles('tools/depends/**') }}
+          restore-keys: kodi-depends-armv7-
 
       - name: Restore ccache
         uses: actions/cache/restore@v4
         id: ccache-restore
         with:
           path: ~/.cache/ccache
-          key: kodi-ccache-aarch64-${{ github.sha }}
+          key: kodi-ccache-armv7-${{ github.sha }}
           restore-keys: |
-            kodi-ccache-aarch64-
+            kodi-ccache-armv7-
 
       - name: Fix JDK headers for libbluray
         run: |
@@ -141,7 +141,7 @@ jobs:
           cd tools/depends
           ./bootstrap
           ./configure \
-            --host=aarch64-linux-android \
+            --host=arm-linux-androideabi \
             --with-tarballs=$HOME/kodi-tarballs \
             --with-sdk-path=$HOME/android-sdk \
             --prefix=$HOME/kodi-depends
@@ -178,14 +178,14 @@ jobs:
         if: always()
         with:
           path: ~/.cache/ccache
-          key: kodi-ccache-aarch64-${{ github.sha }}
+          key: kodi-ccache-armv7-${{ github.sha }}
 
       - name: Build APK
         run: |
           find $HOME/kodi-build -name "gradlew" -exec chmod +x {} \;
           cmake --build $HOME/kodi-build --target apk
 
-      - name: Sign APK
+      - name: Sign and rename APK
         env:
           KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE }}
           KEYSTORE_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
@@ -194,7 +194,13 @@ jobs:
         run: |
           echo "$KEYSTORE_B64" | base64 -d > /tmp/release.keystore
           UNSIGNED=$(find $HOME/kodi-build -name "*.apk" -type f | head -1)
-          SIGNED="${UNSIGNED%.apk}-signed.apk"
+          # Name the output file properly (tag builds use the tag, others use short SHA)
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            APK_NAME="kodi-adam-${GITHUB_REF_NAME}.apk"
+          else
+            APK_NAME="kodi-adam-$(echo $GITHUB_SHA | cut -c1-7).apk"
+          fi
+          SIGNED="/tmp/${APK_NAME}"
           $ANDROID_SDK_ROOT/build-tools/$(ls $ANDROID_SDK_ROOT/build-tools | sort -V | tail -1)/apksigner sign \
             --ks /tmp/release.keystore \
             --ks-pass pass:$KEYSTORE_PASS \
@@ -203,24 +209,17 @@ jobs:
             --out "$SIGNED" \
             "$UNSIGNED"
           echo "SIGNED_APK=$SIGNED" >> $GITHUB_ENV
+          echo "APK_NAME=$APK_NAME" >> $GITHUB_ENV
 
       - name: ccache stats
         if: always()
         run: ccache --show-stats
 
-      - name: Locate APK
-        id: apk
-        run: |
-          APK=$SIGNED_APK
-          echo "path=$APK" >> $GITHUB_OUTPUT
-          echo "name=$(basename $APK)" >> $GITHUB_OUTPUT
-          echo "Found APK: $APK"
-
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: kodi-adam-${{ github.sha }}
-          path: ${{ steps.apk.outputs.path }}
+          path: ${{ env.SIGNED_APK }}
           retention-days: 30
 
       - name: Create GitHub Release
@@ -228,5 +227,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Kodi Adam ${{ github.ref_name }}
-          files: ${{ steps.apk.outputs.path }}
+          files: ${{ env.SIGNED_APK }}
           generate_release_notes: true
