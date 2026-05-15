@@ -6,7 +6,8 @@
   <requires>
     <import addon="xbmc.core" version="0.1.0"/>
   </requires>
-  <extension point="xbmc.ui.screensaver"/>
+  <extension point="xbmc.ui.screensaver"
+             library_android="libkodi.so"/>
   <extension point="xbmc.addon.metadata">
     <summary lang="en_gb">Black Screensaver</summary>
     <description lang="en_gb">Turns the screen black</description>
