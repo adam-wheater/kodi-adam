@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="audioencoder.kodi.builtin.aac"
+       version="1.0.3"
+       name="AAC encoder"
+       provider-name="Team Kodi">
+  <requires>
+    <import addon="kodi.binary.instance.audioencoder" version="3.0.0"/>
+  </requires>
+  <extension point="kodi.audioencoder"
+             extension=".m4a"
+             library_android="libkodi.so"/>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_gb">AAC encoder</summary>
+    <description lang="en_gb">Kodi built-in AAC encoder using FFmpeg</description>
+    <platform>all</platform>
+    <license>GPL-2.0-or-later</license>
+    <source>https://github.com/xbmc/xbmc</source>
+  </extension>
+</addon>

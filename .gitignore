@@ -115,6 +115,8 @@ cmake_install.cmake
 /addons/skin.estuary/media/*.xbt
 /addons/skin.pm3-hd/media/Textures.xbt
 /addons/audioencoder.*
+!/addons/audioencoder.kodi.builtin.aac/
+!/addons/audioencoder.kodi.builtin.wma/
 /addons/pvr.*
 /addons/peripheral.*
 /addons/game.*
@@ -142,6 +144,8 @@ cmake_install.cmake
 /addons/audiodecoder.*
 /addons/visualization.*
 /addons/screensaver.*
+!/addons/screensaver.xbmc.builtin.black/
+!/addons/screensaver.xbmc.builtin.dim/
 /addons/inputstream.*
 /addons/vfs.*
 
