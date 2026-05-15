@@ -1,10 +1,6 @@
 <addons>
   <addon>audioencoder.kodi.builtin.aac</addon>
   <addon>audioencoder.kodi.builtin.wma</addon>
-  <addon optional="true">game.controller.default</addon>
-  <addon optional="true">game.controller.keyboard</addon>
-  <addon optional="true">game.controller.mouse</addon>
-  <addon optional="true">game.controller.snes</addon>
   <addon>kodi.binary.global.audioengine</addon>
   <addon>kodi.binary.global.filesystem</addon>
   <addon>kodi.binary.global.general</addon>
@@ -53,21 +49,27 @@
   <addon>xbmc.metadata</addon>
   <addon>xbmc.python</addon>
   <addon>xbmc.webinterface</addon>
+  <!-- Kodi Adam custom addons — bundled and required -->
+  <addon>plugin.video.fenlight</addon>
+  <addon>repository.cocoscrapers</addon>
+  <addon>repository.peno64</addon>
+  <addon>script.IPTVManager.Fix</addon>
+  <addon>script.RealDebrid.vpn</addon>
+  <addon>script.ezmaintenanceplus</addon>
+  <addon>script.fentastic.helper</addon>
+  <addon>script.module.cocoscrapers</addon>
+  <addon>script.realdebrid</addon>
+  <addon>service.subtitles.localsubtitle</addon>
+  <addon>service.subtitles.opensubtitles-com-dualsub</addon>
+  <addon>service.subtitles.opensubtitles_by_opensubtitles_dualsub</addon>
+  <addon>skin.fentastic</addon>
+  <!-- Optional — present on some platforms/configs only -->
+  <addon optional="true">game.controller.default</addon>
+  <addon optional="true">game.controller.keyboard</addon>
+  <addon optional="true">game.controller.mouse</addon>
+  <addon optional="true">game.controller.snes</addon>
   <addon optional="true">game.shader.presets</addon>
   <addon optional="true">inputstream.adaptive</addon>
   <addon optional="true">peripheral.joystick</addon>
   <addon optional="true">service.xbmc.versioncheck</addon>
-  <addon optional="true">plugin.video.fenlight</addon>
-  <addon optional="true">repository.peno64</addon>
-  <addon optional="true">script.IPTVManager.Fix</addon>
-  <addon optional="true">script.RealDebrid.vpn</addon>
-  <addon optional="true">script.ezmaintenanceplus</addon>
-  <addon optional="true">script.realdebrid</addon>
-  <addon optional="true">service.subtitles.localsubtitle</addon>
-  <addon optional="true">service.subtitles.opensubtitles-com-dualsub</addon>
-  <addon optional="true">service.subtitles.opensubtitles_by_opensubtitles_dualsub</addon>
-  <addon optional="true">repository.cocoscrapers</addon>
-  <addon optional="true">script.fentastic.helper</addon>
-  <addon optional="true">script.module.cocoscrapers</addon>
-  <addon optional="true">skin.fentastic</addon>
 </addons>
